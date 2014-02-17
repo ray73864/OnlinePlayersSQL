@@ -36,19 +36,22 @@ public class MyOnlPlayerListener implements Listener {
     int currentDeathCount = 0;
     Player victim = event.getEntity().getPlayer();
     Player killer = event.getEntity().getKiller();
+    
+    OnlinePlayersSQLQuery myQuery = null;
+    
     if ((this.plugin.opConfig.trackOnlyAllowedPlayers()) && (!killer.hasPermission("onlineplayerssql.allowed"))) {
       return;
     }
-    result = this.plugin.opSql.runSearchQuery("SELECT player_deaths FROM " + this.plugin.opConfig.getMySQLTable() + " WHERE player='" + victim.getName() + "';");
+    
+    myQuery = new OnlinePlayersSQLQuery("SELECT player_deaths FROM " + sqlTable + " WHERE player = ?", victim.getName());
+    result = this.plugin.opSql.runSearchQueryNew(myQuery);
     
     try
     {
     	if ( result.next() ) {
     		currentDeathCount = result.getInt(1) + 1;
-    	      
-    	    this.plugin.opSql.SQLDisconnect();
     	    
-    	    OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET player_deaths=? WHERE player=?", sqlTable, currentDeathCount, victim.getName());
+    	    myQuery = new OnlinePlayersSQLQuery("UPDATE " + sqlTable + " SET player_deaths=? WHERE player=?", currentDeathCount, victim.getName());
     	    this.plugin.opSql.runUpdateQueryNew(myQuery);	
     	}
     }
@@ -59,23 +62,22 @@ public class MyOnlPlayerListener implements Listener {
     
     if (killer != null)
     {
-      result = this.plugin.opSql.runSearchQuery("SELECT player_kills FROM " + this.plugin.opConfig.getMySQLTable() + " WHERE player='" + killer.getName() + "';");
-      try
-      {
-        if ( result.next() ) {
+    	myQuery = new OnlinePlayersSQLQuery("SELECT player_kills FROM " + sqlTable + " WHERE player = ?", killer.getName());
+        result = this.plugin.opSql.runSearchQueryNew(myQuery);
         
-        	currentDeathCount = result.getInt(1) + 1;
-        
-        	this.plugin.opSql.SQLDisconnect();
-        
-        	OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET player_kills=? WHERE player=?", sqlTable, currentDeathCount, killer.getName());
-    	    this.plugin.opSql.runUpdateQueryNew(myQuery);
+        try
+        {
+        	if ( result.next() ) {
+        		currentDeathCount = result.getInt(1) + 1;
+
+        		myQuery = new OnlinePlayersSQLQuery("UPDATE " + sqlTable + " SET player_kills=? WHERE player=?", currentDeathCount, killer.getName());
+        		this.plugin.opSql.runUpdateQueryNew(myQuery);
+        	}
         }
-      }
-      catch (SQLException e)
-      {
-        e.printStackTrace();
-      }
+        catch (SQLException e)
+        {
+        	e.printStackTrace();
+        }
     }
   }
   
