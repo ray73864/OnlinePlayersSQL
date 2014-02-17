@@ -137,7 +137,7 @@ public class OnlinePlayersSQL extends JavaPlugin {
 			if ( command.getName().equalsIgnoreCase("onl")) {
 				if ( args[0].equalsIgnoreCase("resync")) {
 					if ((this.opConfig.opOnlyResync()) && (!player.isOp())) {
-						player.sendMessage("Only Op can use this command.");
+						player.sendMessage("Only opped players can use this command.");
 						return false;
 					}
 					
