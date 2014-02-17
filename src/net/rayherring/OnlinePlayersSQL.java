@@ -54,8 +54,6 @@ public class OnlinePlayersSQL extends JavaPlugin {
 		OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE " + this.opConfig.getMySQLTable() + " SET online = ?", false);
 		this.opSql.runUpdateQueryNew(myQuery);
 		
-		//this.opSql.runUpdateQuery("UPDATE " + this.opConfig.getMySQLTable() + " SET online = false");
-		
 		setupPermissions();
 	}
 	
@@ -105,28 +103,12 @@ public class OnlinePlayersSQL extends JavaPlugin {
 							, true, playerWorld, ipAddress, logonTime, playerName
 				);
 				this.opSql.runUpdateQueryNew(myQuery);
-				
-				
-				
-				/*
-				this.opSql.runUpdateQuery("UPDATE " + sqlTable + 
-						" SET online = true, " + 
-						" current_world = '" + playerWorld + "', " + 
-						" ip_address = '" + ipAddress + ", " + 
-						" logon_time = " + logonTime +
-						" WHERE player = '" + playerName + "'");
-				*/
 			} else {
 				OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery(
 						"INSERT INTO " + sqlTable + " ( player, current_world, ip_address, logon_time, online ) VALUES ( ?, ?, ?, ?, ? )"
 							, playerName, playerWorld, ipAddress, logonTime, true
 				);
 				this.opSql.runUpdateQueryNew(myQuery);
-				
-				/*
-				this.opSql.runUpdateQuery("INSERT INTO " + sqlTable + " (player,current_world,ip_address,logon_time,online) " +
-						"VALUES ('" + playerName + "', '" + playerWorld + "', '" + ipAddress + "', " + logonTime + ", 1);");
-				*/
 			}
 		} catch ( SQLException e) { }
 		
