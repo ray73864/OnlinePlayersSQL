@@ -19,11 +19,13 @@ import org.bukkit.plugin.PluginManager;
 public class MyOnlPlayerListener implements Listener {
   Logger log = Logger.getLogger("Minecraft");
   OnlinePlayersSQL plugin;
+  String sqlTable;
   ResultSet result;
   
   public MyOnlPlayerListener(OnlinePlayersSQL plugin)
   {
     this.plugin = plugin;
+    this.sqlTable = this.plugin.opConfig.getMySQLTable();
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
   }
   
@@ -45,14 +47,16 @@ public class MyOnlPlayerListener implements Listener {
     		currentDeathCount = result.getInt(1) + 1;
     	      
     	    this.plugin.opSql.SQLDisconnect();
-    	      
-    	    this.plugin.opSql.runUpdateQuery("UPDATE " + this.plugin.opConfig.getMySQLTable() + " SET player_deaths=" + currentDeathCount + " WHERE player='" + victim.getName() + "';");	
+    	    
+    	    OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET player_deaths=? WHERE player=?", sqlTable, currentDeathCount, victim.getName());
+    	    this.plugin.opSql.runUpdateQueryNew(myQuery);	
     	}
     }
     catch (SQLException e)
     {
       e.printStackTrace();
     }
+    
     if (killer != null)
     {
       result = this.plugin.opSql.runSearchQuery("SELECT player_kills FROM " + this.plugin.opConfig.getMySQLTable() + " WHERE player='" + killer.getName() + "';");
@@ -64,7 +68,8 @@ public class MyOnlPlayerListener implements Listener {
         
         	this.plugin.opSql.SQLDisconnect();
         
-        	this.plugin.opSql.runUpdateQuery("UPDATE " + this.plugin.opConfig.getMySQLTable() + " SET player_kills=" + currentDeathCount + " WHERE player='" + killer.getName() + "';");
+        	OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET player_kills=? WHERE player=?", sqlTable, currentDeathCount, killer.getName());
+    	    this.plugin.opSql.runUpdateQueryNew(myQuery);
         }
       }
       catch (SQLException e)
@@ -78,6 +83,7 @@ public class MyOnlPlayerListener implements Listener {
   public void onPlayerJoin(PlayerJoinEvent event)
   {
     int firstLogon = (int)event.getPlayer().getFirstPlayed();
+    
     if ((this.plugin.opConfig.trackOnlyAllowedPlayers()) && (!event.getPlayer().hasPermission("onlineplayerssql.allowed"))) {
       return;
     }
@@ -85,7 +91,8 @@ public class MyOnlPlayerListener implements Listener {
       this.log.info("Player World Join: " + event.getPlayer().getName() + " " + event.getPlayer().getWorld().getName());
     }
     if (!event.getPlayer().hasPlayedBefore()) {
-      this.plugin.opSql.runUpdateQuery("UPDATE " + this.plugin.opConfig.getMySQLTable() + " SET first_login=" + firstLogon + " WHERE player='" + event.getPlayer().getName() + "';");
+    	OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET first_login=? WHERE player=?", sqlTable, firstLogon, event.getPlayer().getName());
+    	this.plugin.opSql.runUpdateQueryNew(myQuery);
     }
     this.plugin.updatePlayerRecord(event.getPlayer());
   }
@@ -93,33 +100,41 @@ public class MyOnlPlayerListener implements Listener {
   @EventHandler(priority=EventPriority.NORMAL)
   public void onPlayerWorldChange(PlayerChangedWorldEvent event)
   {
-    String primaryGroup = this.plugin.permission.getPrimaryGroup(event.getPlayer().getWorld().getName(), event.getPlayer().getName());
-    if ((this.plugin.opConfig.trackOnlyAllowedPlayers()) && (!event.getPlayer().hasPermission("onlineplayerssql.allowed"))) {
-      return;
-    }
-    if (this.plugin.opConfig.isShowDebug()) {
-      this.log.info("Player World " + event.getPlayer().getName() + " " + event.getPlayer().getWorld().getName());
-    }
-    this.plugin.opSql.runUpdateQuery("UPDATE " + this.plugin.opConfig.getMySQLTable() + " SET " + 
-      "previous_world='" + event.getFrom().getName() + "', " + 
-      "current_world='" + event.getPlayer().getWorld().getName() + "', " + 
-      "permission_group='" + primaryGroup + "' " + 
-      "WHERE player='" + event.getPlayer().getName() + "';");
+	  String previousWorld = event.getFrom().getName();
+	  String currentWorld = event.getPlayer().getWorld().getName();
+	  String player = event.getPlayer().getName();
+	  
+	  String primaryGroup = this.plugin.permission.getPrimaryGroup(event.getPlayer().getWorld().getName(), event.getPlayer().getName());
+	  if ((this.plugin.opConfig.trackOnlyAllowedPlayers()) && (!event.getPlayer().hasPermission("onlineplayerssql.allowed"))) {
+		  return;
+	  }
+	  if (this.plugin.opConfig.isShowDebug()) {
+		  this.log.info("Player World " + event.getPlayer().getName() + " " + event.getPlayer().getWorld().getName());
+	  }
+    
+	  OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery(
+    		"UPDATE ? SET previous_world=?, current_world=?, permission_group=? WHERE player=?",
+    			sqlTable, previousWorld, currentWorld, primaryGroup, player
+		);
+
+	  this.plugin.opSql.runUpdateQueryNew(myQuery);
   }
   
   @EventHandler(priority=EventPriority.NORMAL)
   public void onPlayerDisconnect(PlayerQuitEvent event)
   {
     int logoutTime = (int)(System.currentTimeMillis() / 1000L);
+    
+    String player = event.getPlayer().getName();
+    
     if ((this.plugin.opConfig.trackOnlyAllowedPlayers()) && (!event.getPlayer().hasPermission("onlineplayerssql.allowed"))) {
       return;
     }
     if (this.plugin.opConfig.isShowDebug()) {
       this.log.info("Player Disconnected " + event.getPlayer().getName() + ".");
     }
-    this.plugin.opSql.runUpdateQuery("UPDATE " + this.plugin.opConfig.getMySQLTable() + " SET " + 
-      "online = false, " + 
-      "last_logout = " + logoutTime + 
-      " WHERE player='" + event.getPlayer().getName() + "'");
+    
+    OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET online = ?, last_logout = ? WHERE player = ?", sqlTable, false, logoutTime, player);
+    this.plugin.opSql.runUpdateQueryNew(myQuery);
   }
 }
