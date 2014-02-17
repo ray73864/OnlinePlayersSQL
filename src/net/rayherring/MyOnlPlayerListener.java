@@ -91,7 +91,7 @@ public class MyOnlPlayerListener implements Listener {
       this.log.info("Player World Join: " + event.getPlayer().getName() + " " + event.getPlayer().getWorld().getName());
     }
     if (!event.getPlayer().hasPlayedBefore()) {
-    	OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET first_login=? WHERE player=?", sqlTable, firstLogon, event.getPlayer().getName());
+    	OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE " + sqlTable + " SET first_login=? WHERE player=?", firstLogon, event.getPlayer().getName());
     	this.plugin.opSql.runUpdateQueryNew(myQuery);
     }
     this.plugin.updatePlayerRecord(event.getPlayer());
@@ -103,8 +103,13 @@ public class MyOnlPlayerListener implements Listener {
 	  String previousWorld = event.getFrom().getName();
 	  String currentWorld = event.getPlayer().getWorld().getName();
 	  String player = event.getPlayer().getName();
+	  String primaryGroup = "";
 	  
-	  String primaryGroup = this.plugin.permission.getPrimaryGroup(event.getPlayer().getWorld().getName(), event.getPlayer().getName());
+	  try {
+		  primaryGroup = this.plugin.permission.getPrimaryGroup(event.getPlayer().getWorld().getName(), event.getPlayer().getName());
+	  } catch (UnsupportedOperationException e) {
+		  primaryGroup = "";
+	  }
 	  if ((this.plugin.opConfig.trackOnlyAllowedPlayers()) && (!event.getPlayer().hasPermission("onlineplayerssql.allowed"))) {
 		  return;
 	  }
@@ -113,8 +118,8 @@ public class MyOnlPlayerListener implements Listener {
 	  }
     
 	  OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery(
-    		"UPDATE ? SET previous_world=?, current_world=?, permission_group=? WHERE player=?",
-    			sqlTable, previousWorld, currentWorld, primaryGroup, player
+    		"UPDATE " + sqlTable + " SET previous_world=?, current_world=?, permission_group=? WHERE player=?",
+    			previousWorld, currentWorld, primaryGroup, player
 		);
 
 	  this.plugin.opSql.runUpdateQueryNew(myQuery);
@@ -134,7 +139,7 @@ public class MyOnlPlayerListener implements Listener {
       this.log.info("Player Disconnected " + event.getPlayer().getName() + ".");
     }
     
-    OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET online = ?, last_logout = ? WHERE player = ?", sqlTable, false, logoutTime, player);
+    OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE " + sqlTable + " SET online = ?, last_logout = ? WHERE player = ?", false, logoutTime, player);
     this.plugin.opSql.runUpdateQueryNew(myQuery);
   }
 }

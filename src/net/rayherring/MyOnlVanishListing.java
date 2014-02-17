@@ -28,19 +28,24 @@ public class MyOnlVanishListing
     String logMessage = "";
     String playerName = event.getPlayer().getName();
     String sqlTable = this.plugin.opConfig.getMySQLTable();
+    
+    OnlinePlayersSQLQuery query = null;
+    
     if (!event.getVisibleAfter())
     {
       int logonTime = (int)(System.currentTimeMillis() / 1000L);
       
-      sqlQuery = "UPDATE " + sqlTable + " SET online = true, logon_time = " + logonTime + " WHERE player='" + playerName + "'";
+      query = new OnlinePlayersSQLQuery("UPDATE " + sqlTable + " SET online = ?, logon_time = ? WHERE player = ?", true, logonTime, playerName);
+      //sqlQuery = "UPDATE " + sqlTable + " SET online = true, logon_time = " + logonTime + " WHERE player='" + playerName + "'";
       logMessage = "Show in stat " + playerName;
     }
     else
     {
-      sqlQuery = "UPDATE " + sqlTable + " SET online = false WHERE player='" + playerName + "'";
+    	query = new OnlinePlayersSQLQuery("UPDATE " + sqlTable + " SET online = ? WHERE player = ?", true, playerName);
+      //sqlQuery = "UPDATE " + sqlTable + " SET online = false WHERE player='" + playerName + "'";
       logMessage = "Hide in stat " + playerName;
     }
-    this.plugin.opSql.runUpdateQuery(sqlQuery);
+    this.plugin.opSql.runUpdateQueryNew(query);
     this.log.info(logMessage);
   }
 }
