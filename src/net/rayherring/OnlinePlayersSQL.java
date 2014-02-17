@@ -116,8 +116,11 @@ public class OnlinePlayersSQL extends JavaPlugin {
 			try {
 				primaryGroup = this.permission.getPrimaryGroup(player.getPlayer().getWorld().getName(), player.getPlayer().getName());
 				
-				this.opSql.runUpdateQuery("UPDATE " + this.opConfig.getMySQLTable() + " SET " +
-						"permission_group='" + primaryGroup + "' " + "WHERE player='" + player.getPlayer().getName() + "';");
+				OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery(
+						"UPDATE ? SET permission_group = ? WHERE player = ?",
+							sqlTable, primaryGroup, player.getPlayer().getName());
+				
+				this.opSql.runUpdateQueryNew(myQuery);
 			} catch ( UnsupportedOperationException e) {
 				
 			}
@@ -126,6 +129,7 @@ public class OnlinePlayersSQL extends JavaPlugin {
 	
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		Player player = null;
+		String sqlTable = this.opConfig.getMySQLTable();
 		
 		if ((sender instanceof Player)) {
 			player = (Player)sender;
@@ -141,7 +145,8 @@ public class OnlinePlayersSQL extends JavaPlugin {
 						return false;
 					}
 					
-					this.opSql.runUpdateQuery("UPDATE " + this.opConfig.getMySQLTable() + " SET online = false;");
+					OnlinePlayersSQLQuery myQuery = new OnlinePlayersSQLQuery("UPDATE ? SET online = ?", sqlTable, false);					
+					this.opSql.runUpdateQueryNew(myQuery);
 					
 					Player[] players = getServer().getOnlinePlayers();
 					for ( int i = 0; i < players.length; i++) {
