@@ -1,7 +1,10 @@
 package net.rayherring;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Logger;
 
 import net.milkbowl.vault.permission.Permission;
@@ -82,37 +85,47 @@ public class OnlinePlayersSQL extends JavaPlugin {
 		int logonTime2 = (int)thisPlayer.getPlayerTime();
 		Boolean recordExists = Boolean.valueOf(false);
 		OnlinePlayersSQLQuery myQuery = null;
+		Connection conn = null;
 		
 		ResultSet result = null;
 		
 		if ((this.opConfig.trackOnlyAllowedPlayers()) && (!player.hasPermission("onlineplayerssql.allowed"))) {
 			return;
 		}
-		
-		myQuery = new OnlinePlayersSQLQuery("SELECT * FROM " + sqlTable + " WHERE player = ?", playerName);
-		result = this.opSql.runSearchQueryNew(myQuery);
-		//result = this.opSql.runSearchQuery("SELECT * FROM " + sqlTable + " WHERE player='" + playerName + "'");
+
 		if ( this.opConfig.isShowDebug()) {
 			this.log.info("Player: " + playerName + " Logon Time: " + logonTime2);
 		}
+
+		myQuery = new OnlinePlayersSQLQuery("SELECT * FROM " + sqlTable + " WHERE player = ?", playerName);
+		PreparedStatement playerExists = null;
 		
 		try {
-			recordExists = Boolean.valueOf(result.isBeforeFirst());
+			conn = opSql.SQLConnect();
+			playerExists = conn.prepareStatement(myQuery.getQuery());
+			result = this.opSql.runSearchQueryNew(conn, myQuery, playerExists);
 			
-			if ( recordExists.booleanValue()) {
+			boolean hasNextRow = result.next();
+
+			if ( hasNextRow ) {
 				myQuery = new OnlinePlayersSQLQuery(
 						"UPDATE " + sqlTable + " SET online = ?, current_world = ?, ip_address = ?, logon_time = ? WHERE player = ?"
 							, true, playerWorld, ipAddress, logonTime, playerName
 				);
-				this.opSql.runUpdateQueryNew(myQuery);
+				
 			} else {
 				myQuery = new OnlinePlayersSQLQuery(
 						"INSERT INTO " + sqlTable + " ( player, current_world, ip_address, logon_time, online ) VALUES ( ?, ?, ?, ?, ? )"
 							, playerName, playerWorld, ipAddress, logonTime, true
 				);
-				this.opSql.runUpdateQueryNew(myQuery);
 			}
-		} catch ( SQLException e) { }
+			
+			this.opSql.runUpdateQueryNew(myQuery);
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		} finally {
+			try { conn.close(); } catch (SQLException e) { }
+		}
 		
 		if (this.permission != null) {
 			try {

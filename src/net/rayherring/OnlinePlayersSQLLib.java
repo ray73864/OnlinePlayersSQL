@@ -109,17 +109,17 @@ public class OnlinePlayersSQLLib
 	  }
   }
   
-  public ResultSet runSearchQueryNew(OnlinePlayersSQLQuery query) {
+  public ResultSet runSearchQueryNew(Connection conn, OnlinePlayersSQLQuery query, PreparedStatement statement) {
 	  ResultSet result = null;
 	  
-	  PreparedStatement statement = null;
+	  //PreparedStatement statement = null;
 	  HashMap<Integer, Object> params = null;
 	  int numberOfParams = 0;
 	  
 	  try {
-		  this.conn = SQLConnect();
+		  //this.conn = SQLConnect();
 		  
-		  statement = this.conn.prepareStatement(query.getQuery());
+		  //statement = this.conn.prepareStatement(query.getQuery());
 		  
 		  params = query.getParams();
 		  numberOfParams = query.numberOfParams();
@@ -130,14 +130,15 @@ public class OnlinePlayersSQLLib
 			  if (params.get(i) instanceof Boolean) statement.setBoolean(i+1, (boolean) params.get(i));
 		  }
 		  
-		  log.info(statement.toString());
+		  if ( plugin.opConfig.isShowDebug()) {
+			  log.info(statement.toString());
+		  }
 		  
 		  result = statement.executeQuery();
 	  } catch (SQLException e) {
 		  e.printStackTrace();
 	  } finally {
-		  try { statement.close(); } catch (SQLException e) { }
-		  try { this.conn.close(); } catch (SQLException e) { }
+		  //try { this.conn.close(); } catch (SQLException e) { }
 	  }
 	  
 	  return result;
