@@ -46,6 +46,8 @@ public class MyOnlVanishListing
       logMessage = "Hide in stat " + playerName;
     }
     this.plugin.opSql.runUpdateQueryNew(query);
-    this.log.info(logMessage);
+    if ( plugin.opConfig.isShowDebug()) {
+    	this.log.info(logMessage);
+    }
   }
 }

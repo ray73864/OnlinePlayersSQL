@@ -131,14 +131,14 @@ public class OnlinePlayersSQL extends JavaPlugin {
 			try {
 				primaryGroup = this.permission.getPrimaryGroup(player.getPlayer().getWorld().getName(), player.getPlayer().getName());
 				
-				myQuery = new OnlinePlayersSQLQuery(
-						"UPDATE " + sqlTable + " SET permission_group = ? WHERE player = ?",
-							primaryGroup, player.getPlayer().getName());
-				
-				this.opSql.runUpdateQueryNew(myQuery);
-			} catch ( UnsupportedOperationException e) {
-				
-			}
+				if ( primaryGroup != "" && primaryGroup != null && primaryGroup != "** NOT SPECIFIED **" ) {
+					myQuery = new OnlinePlayersSQLQuery(
+							"UPDATE " + sqlTable + " SET permission_group = ? WHERE player = ?",
+								primaryGroup, player.getPlayer().getName());
+					
+					this.opSql.runUpdateQueryNew(myQuery);
+				}
+			} catch ( UnsupportedOperationException e) {  }
 		}
 	}
 	

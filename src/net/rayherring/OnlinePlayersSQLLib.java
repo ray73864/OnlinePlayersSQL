@@ -94,7 +94,10 @@ public class OnlinePlayersSQLLib
 			  if (params.get(i) instanceof Boolean) statement.setBoolean(i+1, (boolean) params.get(i));
 		  }
 		  
-		  log.info(statement.toString());
+		  
+		  if ( plugin.opConfig.isShowDebug()) {
+			  log.info(statement.toString());
+		  }
 		  
 		  statement.executeUpdate();
 		  this.conn.commit();
@@ -217,7 +220,9 @@ public class OnlinePlayersSQLLib
     result = runSearchQuery(query);
     try
     {
-      this.log.info("Result of column " + column + " check: " + result.isBeforeFirst());
+      if ( plugin.opConfig.isShowDebug()) {
+        this.log.info("Result of column " + column + " check: " + result.isBeforeFirst());
+      }
       
       recordExists = Boolean.valueOf(result.isBeforeFirst());
       

@@ -1,6 +1,6 @@
 name: OnlinePlayersSQL
 main: net.rayherring.OnlinePlayersSQL
-version: 1.9.4
+version: 1.9.6
 dev-url: http://dev.bukkit.org/server-mods/online-players-sql/
 depend: [Vault]
 softdepend:
